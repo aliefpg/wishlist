@@ -11,6 +11,7 @@ interface ItemCardProps {
   onAllocateFromWallet: (id: string, amount: number) => void;
 }
 
+// Added ItemCardProps generic type to React.FC to define expected component props
 const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDelete, onAllocateFromWallet }) => {
   const [addAmount, setAddAmount] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,11 +33,24 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDe
     return parseInt(num).toLocaleString('id-ID');
   };
 
-  const handleAddDirect = (e: React.FormEvent) => {
+  const handleAddFromWalletManual = (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseInt(cleanToNumber(addAmount));
-    if (!isNaN(val) && val >= 0) {
-      onUpdate(item.id, item.savedAmount + val);
+    
+    if (isNaN(val) || val <= 0) return;
+
+    // Validasi saldo
+    if (val > walletBalance) {
+      alert("Saldo Anda tidak mencukupi untuk menambah jumlah ini.");
+      return;
+    }
+
+    const needed = item.price - item.savedAmount;
+    // Capping: Jangan ambil dari saldo lebih dari yang dibutuhkan barang
+    const actualAllocation = Math.min(val, needed);
+
+    if (actualAllocation > 0) {
+      onAllocateFromWallet(item.id, actualAllocation);
       setAddAmount('');
     }
   };
@@ -77,7 +91,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDe
           <h3 className="text-xl font-bold text-slate-900 mt-3 leading-tight uppercase">{item.name}</h3>
         </div>
         
-        {/* Tombol Delete Reaktif */}
         <button 
           type="button"
           onClick={handleDelete}
@@ -103,16 +116,21 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDe
 
       {!isCompleted ? (
         <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ambil Dari Saldo</span>
+            <span className="text-[10px] font-bold text-indigo-600">Saldo: Rp{walletBalance.toLocaleString('id-ID')}</span>
+          </div>
+
           {walletBalance > 0 && (
             <button 
               onClick={handleQuickAllocate}
-              className="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-slate-100 text-slate-900 border border-slate-300 py-3 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
             >
-              TARIK SALDO (Rp{walletBalance.toLocaleString('id-ID')})
+              TARIK SEMUA SALDO (MAX)
             </button>
           )}
           
-          <form onSubmit={handleAddDirect} className="flex gap-2">
+          <form onSubmit={handleAddFromWalletManual} className="flex gap-2">
             <div className="relative flex-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
               <input
@@ -120,13 +138,18 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDe
                 inputMode="numeric"
                 value={formatRupiah(addAmount)}
                 onChange={(e) => setAddAmount(cleanToNumber(e.target.value))}
-                placeholder="0"
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Jumlah manual..."
+                className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <button
               type="submit"
-              className="bg-indigo-600 text-white px-5 py-3 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all"
+              disabled={walletBalance <= 0}
+              className={`px-5 py-3 rounded-xl text-xs font-bold transition-all ${
+                walletBalance > 0 
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95' 
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
             >
               TAMBAH
             </button>
@@ -135,7 +158,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, walletBalance, onUpdate, onDe
       ) : (
         <div className="flex items-center justify-center py-4 bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-sm">
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-          TERPENUHI
+          TARGET TERPENUHI
         </div>
       )}
     </div>
