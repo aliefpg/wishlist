@@ -38,16 +38,16 @@ const App: React.FC = () => {
       return saved ? (JSON.parse(saved) as ExternalWebsite[]) : [
         {
           id: '1',
-          name: 'Portofolio Saya',
-          description: 'Kumpulan project dan pengalaman kerja saya di bidang pengembangan web.',
-          url: 'https://example.com'
+          name: 'OmniPro',
+          description: 'OmniPro adalah pusat kendali produktivitas All-in-One: Kelola keuangan cerdas, timeline rapat profesional, dan sistem manajemen tugas dalam satu dashboard adaptif.',
+          url: 'https://omni-ruby.vercel.app/'
         },
-        {
-          id: '2',
-          name: 'Project Demo',
-          description: 'Cek demo project lainnya yang sedang dikembangkan.',
-          url: 'https://example.com/demo'
-        }
+        // {
+        //   id: '2',
+        //   name: 'Project Demo',
+        //   description: 'Cek demo project lainnya yang sedang dikembangkan.',
+        //   url: 'https://example.com/demo'
+        // }
       ];
     } catch {
       return [];
